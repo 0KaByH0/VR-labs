@@ -19,12 +19,22 @@ const getFrustum =
 const drawWithFrustum = (drawType) => () => {
   const projection = getFrustum(drawType)(stereoCam);
 
-  const modelView = spaceball.getViewMatrix();
-  const rotateToPointZero = m4.axisRotation([0.707, 0.707, 0], 0);
+  let modelView = spaceball.getViewMatrix();
+
+  if (orient.a && orient.b && orient.g) {
+    const rotZ = m4.axisRotation([0, 0, 1], deg2rad(orient.a));
+    const rotX = m4.axisRotation([1, 0, 0], -deg2rad(orient.b));
+    const rotY = m4.axisRotation([0, 1, 0], deg2rad(orient.g));
+
+    const rot = m4.multiply(m4.multiply(rotX, rotY), rotZ);
+
+    const trans = m4.translation(0, 0, -2);
+
+    modelView = m4.multiply(rot, trans);
+  }
 
   const translateTo = m4.translation(drawType === 'left' ? -0.01 : 0.01, 0, -20);
-  const matrixMultiplied = m4.multiply(rotateToPointZero, modelView);
-  const matrix = m4.multiply(translateTo, matrixMultiplied);
+  const matrix = m4.multiply(translateTo, modelView);
 
   const matrixInverse = m4.inverse(matrix, new Float32Array(16));
   const normalMatrix = m4.transpose(matrixInverse, new Float32Array(16));
