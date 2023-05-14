@@ -7,6 +7,8 @@ let spaceball; // A SimpleRotator object that lets the user rotate the view by m
 
 let stereoCam;
 
+let deviceOrient;
+
 function deg2rad(angle) {
   return (angle * Math.PI) / 180;
 }
@@ -150,18 +152,6 @@ function init() {
     return;
   }
 
-  const videoElement = document.querySelector('video');
-
-  navigator.mediaDevices
-    .getUserMedia({ video: true })
-    .then((stream) => {
-      videoElement.srcObject = stream;
-      videoElement.play();
-    })
-    .catch((error) => {
-      console.error('Error accessing user media', error);
-    });
-
   spaceball = new TrackballRotator(canvas, draw, 0);
 
   const eyeSeparationInput = document.getElementById('eyeSeparation');
@@ -192,6 +182,9 @@ function init() {
     setTexture(gl, image);
     draw();
   };
+
+  const deviceOrientBtn = document.getElementById('deviceOrient');
+  deviceOrientBtn.addEventListener('click', handleDeviceOrient);
 
   draw();
 }
