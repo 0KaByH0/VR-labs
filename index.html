@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-    <title>PA#2</title>
+    <title>CGW</title>
     <style>
         body {
             background-color: #EEEEEE;
@@ -16,22 +16,30 @@
     <script src="./Utils/m4.js"></script>
     <script src="./shader.gpu"></script>
     <script src="./surface.js"></script>
+    <script src="./sphere.js"></script>
     <script src="./pa-1.js"></script>
     <script src="./pa-2.js"></script>
+    <script src="./cgw.js"></script>
     <script src="./main.js"></script>
 
 </head>
 
 <body onload="init()">
 
-    <h2>PA 1 Variant 28 Shevchuk Dmytro TR-22mp</h2>
+    <h2>CGW Variant 26 Shevchuk Dmytro TR-22mp</h2>
     <h3>Ruled rotor cylindroid</h3>
 
     <hr />
 
-    <button id="deviceOrient">Request orientation</button>
+    <button style="display: none;" id="deviceOrient">Request orientation</button>
 
-    <div>
+    <button id="audio">Request audio</button>
+    <div class="filter-container">
+        <label for="filter">Highshelf filter</label>
+        <input id="filter" type="checkbox" checked="checked" />
+    </div>
+
+    <div style="display: none;">
         <div>
             <label for="eyeSeparation">Eye separation</label>
             <input type="range" id="eyeSeparation" name="eyeSeparation" min="0" max="10" step="0.01" value="2">
