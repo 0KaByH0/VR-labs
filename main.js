@@ -2,12 +2,17 @@
 
 let gl; // The webgl context.
 let surface; // A surface model
+let sphere; // A surface sphere
 let shProgram; // A shader program
 let spaceball; // A SimpleRotator object that lets the user rotate the view by mouse.
+let texture;
 
 let stereoCam;
 
 let deviceOrient;
+
+let step = 0;
+let sphereCoords = [0, 0, 0];
 
 function deg2rad(angle) {
   return (angle * Math.PI) / 180;
@@ -16,30 +21,37 @@ function deg2rad(angle) {
 // Constructor
 function Model(name) {
   this.name = name;
-  this.vertices = 0;
   this.count = 0;
+  this.iVertexBuff = gl.createBuffer();
+  this.iTextureBuff = gl.createBuffer();
 
   this.BufferData = function (vertices, textCoords) {
     // vertices
-    const vBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.iVertexBuff);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STREAM_DRAW);
-    gl.enableVertexAttribArray(shProgram.iAttribVertex);
-    gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
 
     // textCoords
-    const tBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.iTextureBuff);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textCoords), gl.STREAM_DRAW);
-    gl.enableVertexAttribArray(shProgram.iAttribTextCoords);
-    gl.vertexAttribPointer(shProgram.iAttribTextCoords, 2, gl.FLOAT, false, 0, 0);
 
     this.count = vertices.length / 3;
-    this.vertices = vertices;
   };
 
   this.Draw = function () {
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.iVertexBuff);
+    gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(shProgram.iAttribVertex);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.iTextureBuff);
+    gl.vertexAttribPointer(shProgram.iAttribTextCoords, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(shProgram.iAttribTextCoords);
+
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, this.count);
+  };
+
+  this.DrawSphere = function () {
+    this.Draw();
+    gl.drawArrays(gl.LINE_STRIP, 0, this.count);
   };
 }
 
@@ -65,24 +77,26 @@ function ShaderProgram(name, program) {
 }
 
 function draw() {
-  gl.clearColor(0, 0, 0, 1);
+  gl.colorMask(false, false, true, true);
+  drawRight();
 
-  gl.clear(gl.DEPTH_BUFFER_BIT);
   gl.colorMask(true, false, false, true);
   drawLeft();
-  gl.clear(gl.DEPTH_BUFFER_BIT);
-  gl.colorMask(false, true, true, true);
-  drawRight();
-}
 
-function rerender() {
-  surface.BufferData(...createSurfaceData());
-  draw();
-
-  document.getElementById('userCoords').innerHTML = `User point cords: X:${userX} Y:${userY}`;
+  gl.colorMask(true, true, true, true);
+  drawSphere();
 }
 
 function initGL() {
+  stereoCam = {
+    aspectRatio: 1,
+    convergence: 40,
+    eyeSeparation: 2,
+    far: 2000,
+    fov: 0.4,
+    near: 16.5,
+  };
+
   let prog = createProgram(gl, vertexShaderSource, fragmentShaderSource);
 
   shProgram = new ShaderProgram('Basic', prog);
@@ -96,9 +110,8 @@ function initGL() {
   surface = new Model('Surface');
   surface.BufferData(...createSurfaceData());
 
-  const ap = gl.canvas.width / gl.canvas.height;
-
-  stereoCam = { eyeSeparation: 2, convergence: 40, aspectRatio: ap, fov: 1.5, near: 10, far: 2000 };
+  sphere = new Model('AudioSphere');
+  sphere.BufferData(...createSphereData(10, 500, 500));
 
   gl.enable(gl.DEPTH_TEST);
 }
@@ -124,6 +137,11 @@ function createProgram(gl, vShader, fShader) {
     throw new Error('Link error in program:  ' + gl.getProgramInfoLog(prog));
   }
   return prog;
+}
+
+function reDraw() {
+  draw();
+  window.requestAnimationFrame(reDraw);
 }
 
 /**
@@ -172,6 +190,21 @@ function init() {
   fovInput.addEventListener('input', onViewChange);
   nearInput.addEventListener('input', onViewChange);
 
+  const audioBtn = document.getElementById('audio');
+  audioBtn.addEventListener('click', () => loadAudio('sound.mp3'));
+
+  const soundFilterElement = document.getElementById('filter');
+  soundFilterElement.addEventListener('change', () => {
+    if (soundFilterElement.checked) {
+      panner?.disconnect();
+      panner?.connect?.(filter);
+      filter?.connect?.(ctx.destination);
+    } else {
+      panner?.disconnect();
+      panner?.connect?.(ctx.destination);
+    }
+  });
+
   const image = new Image();
   const imgURL =
     'https://www.the3rdsequence.com/texturedb/download/9/texture/jpg/1024/brick+wall-1024x1024.jpg';
@@ -186,11 +219,11 @@ function init() {
   const deviceOrientBtn = document.getElementById('deviceOrient');
   deviceOrientBtn.addEventListener('click', handleDeviceOrient);
 
-  draw();
+  reDraw();
 }
 
 function setTexture(gl, image) {
-  const texture = gl.createTexture();
+  texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
