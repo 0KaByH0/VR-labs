@@ -2,7 +2,7 @@ const isLeft = (type) => type === 'left';
 
 const getFrustum =
   (frustumType) =>
-  ({ eyeSeparation, convergence, aspectRatio, fov, near, far }) => {
+  ({ eyeSeparation, convergence, fov, near, far }) => {
     const top = near * Math.tan(fov / 2);
     const bottom = -top;
 
@@ -33,6 +33,7 @@ const drawWithFrustum = (drawType) => () => {
     modelView = m4.multiply(rot, trans);
   }
 
+  gl.bindTexture(gl.TEXTURE_2D, texture);
   const translateTo = m4.translation(drawType === 'left' ? -0.01 : 0.01, 0, -20);
   const matrix = m4.multiply(translateTo, modelView);
 
@@ -49,3 +50,31 @@ const drawWithFrustum = (drawType) => () => {
 
 const drawRight = drawWithFrustum('right');
 const drawLeft = drawWithFrustum('left');
+
+const drawSphere = () => {
+  let modelView = spaceball.getViewMatrix();
+
+  step += 0.01;
+
+  sphereCoords[0] = Math.cos(step) * 60;
+  sphereCoords[2] = -80 + Math.sin(step) * 60;
+
+  panner?.setPosition(...[Math.cos(step) * 3.4, 0, Math.sin(step) * 3.4]);
+
+  gl.bindTexture(gl.TEXTURE_2D, null);
+
+  const projection = m4.perspective(deg2rad(90), 1, 0.2, 500);
+
+  const translationSphere = m4.translation(...sphereCoords);
+  const matrix = m4.multiply(translationSphere, modelView);
+
+  const matrixInverse = m4.inverse(matrix, new Float32Array(16));
+  const normalMatrix = m4.transpose(matrixInverse, new Float32Array(16));
+
+  const modelViewProjection = m4.multiply(projection, matrix);
+
+  gl.uniformMatrix4fv(shProgram.iModelViewProjectionMatrix, false, modelViewProjection);
+  gl.uniformMatrix4fv(shProgram.iNormalMatrix, false, normalMatrix);
+
+  sphere.DrawSphere();
+};
