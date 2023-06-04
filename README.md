@@ -1,10 +1,9 @@
 # WebGL LABS
 
-VARIANT 28 Shevchuk Dmytro TR-22mp
+VARIANT 26 Shevchuk Dmytro TR-22mp
 
-PA 1
-![image](/pa-1/1.gif)
-![image](/pa-1/2.png)
+CGW
+https://github.com/0KaByH0/VR-labs/assets/70032818/4f55507e-4e2a-4240-8e63-27e38ba949c2
 
-PA 2
-![image](/pa-2/1.gif)
+CGW Report
+https://github.com/0KaByH0/VR-labs/blob/36fd065e6317fdeef417df2ba45de5f595d8d1ec/Report.pdf
